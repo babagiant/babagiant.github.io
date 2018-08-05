@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="content-language" content="ja">
+<meta charset="utf-8">
+<title>SNACKS</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+<script type="text/javascript" src="./js/processing.js"></script>
+<script type="text/javascript">
+window.onload = function() {
+	var canvas = document.getElementsByTagName('canvas')[0];
+	var codeElm = document.getElementById('p55code');
+	var code = codeElm.textContent || codeElm.innerText;
+	new Processing(canvas, code);
+};
+</script>
+<script id="p55code" type="application/processing">
+CCircleObj[] obj;
+int num_obj = 192;
+
+// setup
+void setup()
+{
+	size(320, 96);
+
+	//frameRate(60);
+	background(0);
+	smooth();
+	obj = new CCircleObj[num_obj];
+	for(int i = 0; i < num_obj; i++) {
+		obj[i] = new CCircleObj();
+	}
+}
+
+// draw
+void draw()
+{
+	background(0, 0);
+	for(int i = 0; i < num_obj; i++) {
+		obj[i].advance();
+	}
+	stroke(48);
+	fill(255, 255, 255);
+	for(int i = 0; i < num_obj; i++) {
+		obj[i].draw();
+	}
+}
+
+// CCircleObj
+class CCircleObj {
+	float	m_x;
+	float	m_y;
+	float	m_vx;
+	float	m_vy;
+	int		m_cnt;
+	int		m_cntTgt;
+	float	m_r;
+
+	CCircleObj()
+	{
+		reset();
+	}
+
+	void reset()
+	{
+		float temp = random(TWO_PI);
+		m_x = sin(temp) * random(0.1, 32) + 160;
+		m_y = cos(temp) * random(0.1, 32) + 48;
+		m_vx = random(-32.0, 32.0);
+		m_vy = random(-32.0, 32.0);
+		m_cnt = 0;
+		m_cntTgt = 10 + (int)random(0, 30);
+		m_r = random(4, 24);
+	}
+
+	void advance()
+	{
+		if(++m_cnt > m_cntTgt) {
+			reset();
+		}
+		m_x += m_vx; m_vx *= random(0.90, 0.96);
+		m_y += m_vy; m_vy *= random(0.93, 0.97);
+	}
+
+	void draw()
+	{
+		float r = m_r * m_cnt / m_cntTgt;
+		ellipse(m_x, m_y, r, r);
+	}
+}
+</script>
+</head>
+<body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0">
+
+<div class="body">
+<canvas width="320" height="96"></canvas>
+<h1>SNACKS</h1>
+	<div class="menu">
+	IMAGES<br>
+	&nbsp;&nbsp;┗<a href="http://okhotsk.tumblr.com/" title="okhotsk">okhotsk</a>(photo)<br>
+	&nbsp;&nbsp;┗<a href="http://babagiant.tumblr.com/" title="babagiant the kuso dekai">babagiant the kuso dekai</a>(tumblelog)<br>
+	&nbsp;&nbsp;┗<a href="http://justprice.tumblr.com/" title="Just Price">Just Price</a>(photo)<br>
+	&nbsp;&nbsp;┗<a href="http://differencequotient.tumblr.com/" title="dq">dq</a>(GIF)<br>
+	&nbsp;&nbsp;┗<a href="videos/test.html" title="dq">videos</a>(mp4)<br>
+	TEXTS<br>
+	&nbsp;&nbsp;┗<a href="http://tentama.tumblr.com/" title="anyday">anyday</a>(diary)<br>
+	&nbsp;&nbsp;┗<a href="http://twitter.com/babagiant" title="twitter">@babagiant</a>(twitter)<br>
+	OTHERS<br>
+	&nbsp;&nbsp;┗<a href="./snowxsnow.html" title="snowxsnow_20120123">snowxsnow(processing.js)</a><br>
+	&nbsp;&nbsp;┗<a href="./koma/index.html" title="koma">koma(processing.js)</a><br>
+	&nbsp;&nbsp;┗<a href="https://dl.dropboxusercontent.com/u/503575/sushi-release-signed.apk" title="sushi.apk">sushi wo nigitte arukitai(processing for Android)</a><br>
+	&nbsp;&nbsp;┗<a href="https://github.com/babagiant/iroha/wiki">memo</a><br>
+	&nbsp;&nbsp;┗<a href="http://babagiant.jottit.com/">jottit.com</a><br>
+	&nbsp;&nbsp;┗<a href="http://8tracks.com/babagiant">8tracks.com</a><br>
+	&nbsp;&nbsp;┗<a href="http://soundcloud.com/babagiant">soundcloud.com</a><br>
+	<br>
+	&nbsp;&nbsp;<a href="./info.html" title="info">info</a><br>
+	</div>
+</div>
+
+</body>
+</html>
+

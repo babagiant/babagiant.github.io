@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja">
+<meta charset="utf-8">
+<title>20120123</title>
+<link rel="stylesheet" href="style2.css" type="text/css">
+<script type="text/javascript" src="./js/processing.js"></script>
+<script type="text/javascript">
+window.onload = function() {
+	var canvas = document.getElementsByTagName('canvas')[0];
+	var codeElm = document.getElementById('p55code');
+	var code = codeElm.textContent || codeElm.innerText;
+	new Processing(canvas, code);
+};
+</script>
+<script id="p55code" type="application/processing">
+CSnowObj[] snow_obj;
+CBgObj[] bg_obj;
+int num_snow_obj = 128;
+int num_bg_obj = 48;
+float wind_vx = 0.0;
+float bank_y = 0.0;
+float rot = 0.0;
+
+// setup
+void setup()
+{
+	size(400, 128);
+
+	background(32);
+	smooth();
+	snow_obj = new CSnowObj[num_snow_obj];
+	bg_obj = new CBgObj[num_bg_obj];
+	for(int i = 0; i < num_snow_obj; i++) {
+		snow_obj[i] = new CSnowObj();
+	}
+	for(int i = 0; i < num_bg_obj; i++) {
+		bg_obj[i] = new CBgObj();
+	}
+}
+
+// draw
+void draw() 
+{
+	background(0, 192);
+	wind_vx = wind_vx * 0.9 + (200.0 - mouseX) * 0.1 * 0.1;
+	bank_y = bank_y * 0.9 + mouseY * 0.1;
+	for(int i = 0; i < num_snow_obj; i++) {
+		snow_obj[i].advance();
+	}
+	for(int i = 0; i < num_bg_obj; i++) {
+		bg_obj[i].advance();
+	}
+
+	noStroke();
+	for(int i = 0; i < num_bg_obj; i++) {
+		bg_obj[i].draw();
+	}
+	for(int i = 0; i < num_snow_obj; i++) {
+		snow_obj[i].draw();
+	}
+	rot += 0.02;
+	fill(16, 16, 96 + sin(rot) * 32, 64);
+	rect(0, 0, 400, 128);
+}
+
+// CSnowObj
+class CSnowObj {
+	float m_x;
+	float m_y;
+	float m_vx;
+	float m_vy;
+	int m_alpha;
+
+	CSnowObj()
+	{
+		reset();
+	}
+
+	void reset()
+	{
+		m_x = random(0, 400);
+		m_y = random(-80, 96);
+		m_vx = random(-0.25, 0.25);
+		m_vy = random(0.8, 1.5);
+		m_alpha = 0;
+	}
+
+	void advance()
+	{
+		m_x += m_vx + wind_vx;
+		if(m_x > 400)		{ m_x -= 400; }
+		else if(m_x < 0)	{ m_x += 400; }
+		m_y += m_vy;
+		m_alpha += 2;
+		if(m_alpha > 255) {
+			m_alpha = 255;
+		}
+		if(m_y > 128) {
+			reset();
+		}
+	}
+
+	void draw()
+	{
+		fill(255, m_alpha);
+		ellipse(m_x, m_y, 3.0, 3.0);
+	}
+}
+
+// CBgObj
+class CBgObj {
+	float m_x;
+	float m_y;
+	float m_w;
+	float m_h;
+	float m_sc;
+	color m_color;
+
+	CBgObj()
+	{
+		reset();
+	}
+
+	void reset()
+	{
+		m_x = random(0, 400);
+		m_y = 128;
+		m_w = random(4, 15);
+		m_h = random(10, 38);
+		m_sc = random(0.4, 0.6);
+		m_color = color(32, 80 + random(60), 120 + random(120));
+	}
+
+	void advance()
+	{
+		m_x += wind_vx * m_sc;
+		if(m_x > 400 + m_w)		{ m_x -= 400 + m_w * 2; }
+		else if(m_x <  -m_w)	{ m_x += 400 + m_w * 2; }
+		m_y = 128 - bank_y * m_sc * 0.2;
+	}
+
+	void draw()
+	{
+		fill(m_color, 255);
+		rect(m_x - m_w, m_y - m_h, m_w * 2, m_h + (128 - m_y));
+	}
+}
+</script>
+</head>
+<body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0">
+
+<div class="body">
+<canvas width="320" height="96" style="cursor: crosshair"></canvas>
+<h2>20120123</h2>
+<a href="./index.html" title="return">return</a><br>
+</div>
+
+</body>
+</html>
+

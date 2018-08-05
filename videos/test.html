@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head lang="jp">
+	<meta charset="UTF-8">
+	<title>videos</title>
+	<style>
+		html, body {
+			margin: 0;
+			width: 100%;
+			height: 100%;
+			background-color: #000;
+		}
+		#videobcg {
+			position: absolute;
+			top: 0px;
+			left: 0px;
+			min-width: 100%;
+			min-height: 100%;
+			width: auto;
+			height: auto;
+			z-index: 1;
+			overflow: hidden;
+		}
+		#mask {
+			background-color: #000;
+			position: absolute;
+			top: 0px;
+			left: 0px;
+			min-width: 100%;
+			min-height: 100%;
+			width: auto;
+			height: auto;
+			z-index: 16;
+			opacity: 1.0;
+			display: none
+		}
+	}		
+	</style>
+</head>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">google.load("jquery","1.5.0");</script>
+<body>
+<video id="videobcg" preload="auto" autoplay="true" volume="0">
+	<source src="video/xxx.mp4" type="video/mp4">
+		Sorry, your browser does not support HTML5 video.
+</video>
+<div id="mask">
+</div>
+<script type="text/javascript">
+var v = document.getElementById("videobcg");
+v.onloadeddata = function() {
+	$('div').fadeOut(60, function() {
+		if(++idx >= lst.length) {
+			idx = 0;
+		}
+	});
+};
+document.onkeydown = function() {
+	var vol = v.volume
+	if(event.keyCode == 38) {
+		vol += 0.025;
+	}
+	if(event.keyCode == 40) {
+		vol -= 0.025;
+	}
+	if(vol < 0.0) {
+		vol = 0.0;
+	}
+	else if(vol > 1.0) {
+		vol = 1.0;
+	}
+	v.volume = vol;
+
+	if(event.keyCode == 77) {
+		if(v.muted == true) {
+			v.muted = false;
+		}
+		else {
+			v.muted = true;
+		}
+	}
+};
+var m = document.getElementById("mask");
+var idx = 0;
+var prefix = "https://dl.dropboxusercontent.com/u/503575/hp/videos/";
+var lst = new Array(
+	"video/MVI 0026.mp4",
+	"video/MVI 0028.mp4",
+	"video/MVI 0029.mp4",
+	"video/MVI 0030.mp4",
+	"video/MVI 0037.mp4",
+	"video/MVI 0040.mp4",
+	"video/MVI 0042.mp4",
+	"video/MVI 0047.mp4",
+	"video/MVI 0059.mp4",
+	"video/MVI 0068.mp4",
+	"video/MVI 0075.mp4",
+	"video/MVI 0140.mp4",
+	"video/MVI 0150.mp4",
+	"video/MVI 0159.mp4",
+	"video/MVI 0219.mp4",
+	"video/MVI 0225.mp4",
+	"video/MVI 0229.mp4",
+	"video/MVI 0240.mp4",
+	"video/MVI 0387.mp4",
+	"video/MVI 0472.mp4"
+);
+lst.sort(function() {
+	return Math.random() - .5;
+});
+function playV() {
+	v.play();
+	v.addEventListener("ended", function(){
+		setV();
+		v.play();
+		//playV();
+	}, false);
+	v.addEventListener("click", resetV);
+}
+function setV() {
+	$(document).ready(function() {
+		$('div').fadeIn(300, function() {
+			v.src = prefix + lst[idx];
+			v.load();
+		});
+	});
+}
+function resetV() {
+	setV();
+	v.play();
+}
+v.src = lst[idx];
+v.volume = 0.025;
+setV();
+playV();
+</script>
+</body>
+</html>
