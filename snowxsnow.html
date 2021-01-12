@@ -18,7 +18,7 @@ window.onload = function() {
 CSnowObj[] snow_obj;
 CBgObj[] bg_obj;
 int num_snow_obj = 128;
-int num_bg_obj = 48;
+int num_bg_obj = 64;
 float wind_vx = 0.0;
 float bank_y = 0.0;
 float rot = 0.0;
@@ -38,6 +38,22 @@ void setup()
 	for(int i = 0; i < num_bg_obj; i++) {
 		bg_obj[i] = new CBgObj();
 	}
+	for(int i = 0; i < num_bg_obj; i++) {
+		bg_obj[i] = new CBgObj();
+	}
+	bg_obj[0].m_isEmmisive = true;
+	bg_obj.sort(function(a, b) {
+		int result = 0; 
+		float temp = a.m_sc - b.m_sc;
+		if (temp < 0){ 
+			result = -1; 
+		} else if (temp > 0){
+			result = 1; 
+		} else {
+			result = 0; 
+		}
+		return result; 
+	});
 }
 
 // draw
@@ -117,6 +133,8 @@ class CBgObj {
 	float m_h;
 	float m_sc;
 	color m_color;
+	bool m_isEmmisive;
+	float m_tick;
 
 	CBgObj()
 	{
@@ -127,10 +145,14 @@ class CBgObj {
 	{
 		m_x = random(0, 400);
 		m_y = 128;
-		m_w = random(4, 15);
-		m_h = random(10, 38);
-		m_sc = random(0.4, 0.6);
-		m_color = color(32, 80 + random(60), 120 + random(120));
+		m_sc = random(0.3, 0.7);
+		float sc_bg =  2 * m_sc;
+		m_h = random(4, 24) + 108 * (0.7 - m_sc);
+		m_w = random(8, 16) * sc_bg;
+		float sc_col = m_sc + 0.3;
+		sc_col = 1;
+		m_color = color(32, 60 + random(60) * sc_col, 120 + random(120) * sc_col);
+		m_isEmmisive = false;
 	}
 
 	void advance()
@@ -139,12 +161,22 @@ class CBgObj {
 		if(m_x > 400 + m_w)		{ m_x -= 400 + m_w * 2; }
 		else if(m_x <  -m_w)	{ m_x += 400 + m_w * 2; }
 		m_y = 128 - bank_y * m_sc * 0.2;
+		if(m_isEmmisive) {
+			m_tick += 0.05;
+		}
 	}
 
 	void draw()
 	{
 		fill(m_color, 255);
 		rect(m_x - m_w, m_y - m_h, m_w * 2, m_h + (128 - m_y));
+		if(m_isEmmisive) {
+			float a = sin(m_tick) + 1.0 * 0.5;
+			fill(color(255, 255, 0, 80 * a));
+			rect(m_x - 6, m_y - m_h -6, 12, 12);
+			fill(color(255, 255, 0, 192 * a));
+			rect(m_x - 2, m_y - m_h -2, 4, 4);
+		}
 	}
 }
 </script>
