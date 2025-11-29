@@ -16,19 +16,34 @@ window.onload = function() {
 </script>
 <script id="p55code" type="application/processing">
 CCircleObj[] obj;
-int num_obj = 192;
+int[] drawIndices;
+int num_obj = 512;
+int size_x = window.innerWidth;//320;
+int size_y = window.innerHeight;//96*4;
+int size_x_half = size_x / 2;
+int size_y_half = size_y / 2;
+int circle_r_min = 12;
+int circle_r_max = 128;
+int circle_x_range = 64;
+int circle_y_range = 64;
+int circle_vx_range = 64;
+int circle_vy_range = 64;
+int circle_appear_center_x = 108;
+int circle_appear_center_y = 88;
 
 // setup
 void setup()
 {
-	size(320, 96);
+	size(size_x, size_y);
 
 	//frameRate(60);
 	background(0);
 	smooth();
 	obj = new CCircleObj[num_obj];
-	for(int i = 0; i < num_obj; i++) {
+	drawIndices = new int[num_obj];
+  	for(int i = 0; i < num_obj; i++) {
 		obj[i] = new CCircleObj();
+		drawIndices[i] = i;
 	}
 }
 
@@ -39,11 +54,12 @@ void draw()
 	for(int i = 0; i < num_obj; i++) {
 		obj[i].advance();
 	}
-	stroke(48);
-	fill(255, 255, 255);
-	for(int i = 0; i < num_obj; i++) {
-		obj[i].draw();
-	}
+    drawIndices.sort(function(a, b) {
+        return obj[a].m_r_cur - obj[b].m_r_cur;
+    });
+    for(int i = 0; i < num_obj; i++) {
+        obj[drawIndices[i]].draw();
+    }
 }
 
 // CCircleObj
@@ -54,6 +70,7 @@ class CCircleObj {
 	float	m_vy;
 	int		m_cnt;
 	int		m_cntTgt;
+	float	m_r_cur;
 	float	m_r;
 
 	CCircleObj()
@@ -64,13 +81,13 @@ class CCircleObj {
 	void reset()
 	{
 		float temp = random(TWO_PI);
-		m_x = sin(temp) * random(0.1, 32) + 160;
-		m_y = cos(temp) * random(0.1, 32) + 48;
-		m_vx = random(-32.0, 32.0);
-		m_vy = random(-32.0, 32.0);
+		m_x = sin(temp) * random(0.1, circle_x_range) + circle_appear_center_x;
+		m_y = cos(temp) * random(0.1, circle_y_range) + circle_appear_center_y;
+		m_vx = random(-circle_vx_range, circle_vx_range);
+		m_vy = random(-circle_vy_range, circle_vy_range);
 		m_cnt = 0;
 		m_cntTgt = 10 + (int)random(0, 30);
-		m_r = random(4, 24);
+		m_r = random(circle_r_min, circle_r_max);
 	}
 
 	void advance()
@@ -80,39 +97,47 @@ class CCircleObj {
 		}
 		m_x += m_vx; m_vx *= random(0.90, 0.96);
 		m_y += m_vy; m_vy *= random(0.93, 0.97);
+		m_r_cur = m_r * m_cnt / m_cntTgt;
 	}
 
 	void draw()
-	{
-		float r = m_r * m_cnt / m_cntTgt;
-		ellipse(m_x, m_y, r, r);
+	{ 
+		int a = 384 * (1.0 - m_cnt / m_cntTgt);
+		if(a > 255) {
+			a = 255;
+		}
+		stroke(48, 24, 24, a);
+		fill(255, 192, 192, a);
+		ellipse(m_x, m_y, m_r_cur, m_r_cur);
 	}
 }
 </script>
 </head>
 <body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0">
 
-<div class="body">
-<canvas width="320" height="96"></canvas>
-<h1>SNACKS</h1>
-	<div class="menu">
-	IMAGES<br>
-	&nbsp;&nbsp;┗<a href="http://okhotsk.tumblr.com/" title="okhotsk">okhotsk</a>(photo)<br>
-	&nbsp;&nbsp;┗<a href="http://babagiant.tumblr.com/" title="babagiant the kuso dekai">babagiant the kuso dekai</a>(tumblelog)<br>
-	&nbsp;&nbsp;┗<a href="http://justprice.tumblr.com/" title="Just Price">Just Price</a>(photo)<br>
-	&nbsp;&nbsp;┗<a href="http://differencequotient.tumblr.com/" title="dq">dq</a>(GIF)<br>
-	&nbsp;&nbsp;┗<a href="videos/test.html" title="dq">videos</a>(mp4)<br>
-	TEXTS<br>
-	&nbsp;&nbsp;┗<a href="http://tentama.tumblr.com/" title="anyday">anyday</a>(diary)<br>
-	&nbsp;&nbsp;┗<a href="http://twitter.com/babagiant" title="twitter">@babagiant</a>(twitter)<br>
-	OTHERS<br>
-	&nbsp;&nbsp;┗<a href="./snowxsnow.html" title="snowxsnow_20120123">snowxsnow(processing.js)</a><br>
-	&nbsp;&nbsp;┗<a href="./laval.html" title="laval_20201109">laval(processing.js)</a><br>
-	&nbsp;&nbsp;┗<a href="./koma/index.html" title="koma">koma(processing.js)</a><br>
-	&nbsp;&nbsp;┗<a href="https://t.co/plXPglZbnS" title="sushi.apk">sushi wo nigitte 
-arukitai(processing for Android)</a><br>
-	<br>
-	&nbsp;&nbsp;<a href="./info.html" title="info">info</a><br>
+	<div class="body">
+	<div class="container">
+		<canvas width="320" height="96" id="canvas"></canvas>
+		<h1 class="overlay">SNACKS</h1>
+		<div class="menu">
+		<h2>IMAGES</h2>
+		&nbsp;&nbsp;┗<a href="http://okhotsk.tumblr.com/" title="okhotsk">okhotsk</a>(photo)<br>
+		&nbsp;&nbsp;┗<a href="http://babagiant.tumblr.com/" title="babagiant the kuso dekai">babagiant the kuso dekai</a>(tumblelog)<br>
+		&nbsp;&nbsp;┗<a href="http://justprice.tumblr.com/" title="Just Price">Just Price</a>(photo)<br>
+		&nbsp;&nbsp;┗<a href="http://differencequotient.tumblr.com/" title="dq">dq</a>(GIF)<br>
+		&nbsp;&nbsp;┗<a href="videos/test.html" title="dq">videos</a>(mp4)<br>
+		<h2>TEXTS</h2>
+		&nbsp;&nbsp;┗<a href="http://tentama.tumblr.com/" title="anyday">anyday</a>(diary)<br>
+		&nbsp;&nbsp;┗<a href="http://x.com/babagiant" title="x.com">@babagiant</a>(x.com)<br>
+		<h2>OTHERS</h2>
+		&nbsp;&nbsp;┗<a href="./snowxsnow.html" title="snowxsnow_20120123">snowxsnow(processing.js)</a><br>
+		&nbsp;&nbsp;┗<a href="./laval.html" title="laval_20201109">laval(processing.js)</a><br>
+		&nbsp;&nbsp;┗<a href="./koma/index.html" title="koma">koma(processing.js)</a><br>
+		&nbsp;&nbsp;┗<a href="https://t.co/plXPglZbnS" title="sushi.apk">sushi wo nigitte 
+	arukitai(processing for Android)</a><br>
+		<br>
+		&nbsp;&nbsp;<a href="./info.html" title="info">info</a><br>
+		</div>
 	</div>
 </div>
 
