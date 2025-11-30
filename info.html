@@ -1,80 +1,182 @@
-<!DOCTYPE html>
-	<head>
-		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-		<title>info</title>
-		<meta name="Generator" content="Processing" />
-		<!-- - - - - - - - - - - - - - - - - - - - - 
-		+
-		+    Wondering how this works? 
-		+
-		+    Go to: http://processing.org/
-		+    and: http://processingjs.org/
-		+
-		+ - - - - - - - - - - - - - - - - - - - - -->
-		<style type="text/css">
-	body {
-	  margin: 0; overflow: hidden;
-	  background-color: #fff; color: #444; line-height: normal;
-	  font-family: Lucida Grande, Lucida Sans, Arial, Helvetica Neue, Verdana, Geneva, sans-serif;
-	  font-size: 11px; font-weight: normal; text-decoration: none;
-	  text-shadow: 3px 3px 0 rgba(0,0,0,0.15);
-	}
-	a img { 
-		border: 0px solid transparent;
-	}
-	a 			{ color: #666; text-decoration: none; }
-	a:link		{ color: #666; text-decoration: none; }
-	a:visited	{ color: #666; text-decoration: none; }
-	a:active	{ color: #8ff; background-color: #fee; text-decoration: none;  }
-	a:hover		{ color: #c44; background-color: #fee; text-decoration: underline; }
-	canvas { 
-		display: block; 
-		outline: 0px; 
-		margin: 0.0em; 
-	}
-	#content { 
-		margin: 0px auto 0px auto; padding: 0px 0px 0px 0px;
-		width: 1280px; min-width: 300px; overflow: auto;
-		border: none;
-		background-color: #fff;
-	}
-	.info {
-		position: absolute;
-		top: 64px;
-		left: 32px;
-		padding: 0px;
-		font-size: 30px;
-		text-align: left;
-	}
-		</style>
-		<!--[if lt IE 9]>
-			<script type="text/javascript">alert("Your browser does not support the canvas tag.");</script>
-		<![endif]-->
-		<script src="./js2/processing.js" type="text/javascript"></script>
-		<script type="text/javascript">
-// convenience function to get the id attribute of generated sketch html element
-function getProcessingSketchId () { return 'sketch150409a'; }
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="content-language" content="ja">
+<meta charset="utf-8">
+<title>SNACKS</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+<script type="text/javascript" src="./js/processing.js"></script>
+<script type="text/javascript">
+window.onload = function() {
+	var canvas = document.getElementsByTagName('canvas')[0];
+	var codeElm = document.getElementById('p55code');
+	var code = codeElm.textContent || codeElm.innerText;
+	new Processing(canvas, code);
+};
 </script>
+<script id="p55code" type="application/processing">
+CCircleObj[] obj;
+int[] drawIndices;
+int num_obj = 512;
+int size_x = window.innerWidth;
+int size_y = window.innerHeight;
+int size_x_half = size_x / 2;
+int size_y_half = size_y / 2;
+int circle_r_min = 12;
+int circle_r_max = 128;
+int circle_x_range = 64;
+int circle_y_range = 64;
+int circle_vx_range = 64;
+int circle_vy_range = 64;
+int circle_appear_center_x = 108;
+int circle_appear_center_y = 88;
 
-	</head>
-	<body>
-		<div id="content">
-			<div>
-				<canvas id="sketch150409a" data-processing-sources="sketch_150409a.pde" 
-						width="1280" height="800">
-					<p>Your browser does not support the canvas tag.</p>
-					<!-- Note: you can put any alternative content here. -->
-				</canvas>
-				<noscript>
-					<p>JavaScript is required to view the contents of this page.</p>
-				</noscript>
-	    	</div>
+// setup
+void setup()
+{
+	size(size_x, size_y);
+
+	//frameRate(60);
+	background(0);
+	smooth();
+	obj = new CCircleObj[num_obj];
+	drawIndices = new int[num_obj];
+  	for(int i = 0; i < num_obj; i++) {
+		obj[i] = new CCircleObj();
+		drawIndices[i] = i;
+	}
+}
+
+// draw
+void draw()
+{
+	for(int i = 0; i < num_obj; i++) {
+		obj[i].advance();
+	}
+    drawIndices.sort(function(a, b) {
+        return obj[a].m_r_cur - obj[b].m_r_cur;
+    });
+    for(int i = 0; i < num_obj; i++) {
+        obj[drawIndices[i]].draw();
+    }
+}
+
+// CCircleObj
+class CCircleObj {
+	float	m_x;
+	float	m_y;
+	float	m_vx;
+	float	m_vy;
+	int		m_cnt;
+	int		m_cntTgt;
+	float	m_r_cur;
+	float	m_r;
+	int		m_step;
+	int		m_tgt_r;
+	int		m_tgt_g;
+	int		m_tgt_b;
+
+	CCircleObj()
+	{
+		m_step = -1;
+		next_step();
+	}
+
+	void next_step()
+	{
+		if(++m_step >= 2) {
+			m_step = 0;
+		}
+
+		switch(m_step) {
+		case 0:
+			float temp = random(TWO_PI);
+			m_x = sin(temp) * random(0.1, circle_x_range) + circle_appear_center_x;
+			m_y = cos(temp) * random(0.1, circle_y_range) + circle_appear_center_y;
+			m_vx = random(-circle_vx_range, circle_vx_range);
+			m_vy = random(-circle_vy_range, circle_vy_range);
+			m_cnt = 0;
+			m_cntTgt = 10 + (int)random(0, 30);
+			m_r = random(circle_r_min, circle_r_max);
+			break;
+
+		case 1:
+			m_vx = 0.0f;
+			m_vy = 0.0f;
+			m_cnt = 0;
+			m_cntTgt = 60 + (int)random(0, 90);
+			m_tgt_r = random(16, 255);
+			m_tgt_g = random(16, 255);
+			m_tgt_b = random(16, 255);
+			m_r = m_r_cur;
+			break;
+		}
+	}
+
+	void advance()
+	{
+		if(++m_cnt > m_cntTgt) {
+			next_step();
+		}
+		m_x += m_vx;
+		m_y += m_vy;
+
+		switch(m_step) {
+		case 0:
+			m_vx *= random(0.90, 0.96);
+			m_vy *= random(0.93, 0.97);
+			m_r_cur = m_r * m_cnt / m_cntTgt;
+			break;
+
+		case 1:
+			m_vx *= random(0.70, 0.8);
+			m_vy += random(0.2, 0.3);
+			m_r_cur *= random(0.994, 0.998);
+			break;
+		}
+	}
+
+	void draw()
+	{ 
+		int a = 384 * (1.0 - m_cnt / m_cntTgt);
+		if(a > 255) {
+			a = 255;
+		}
+		switch(m_step) {
+		case 0:
+			noStroke();
+			fill(255, 192, 192, a);
+			ellipse(m_x, m_y, m_r_cur, m_r_cur);
+			break;
+
+		case 1:
+			{
+				noStroke();
+				float t = (float)m_cnt / m_cntTgt;
+				float t2 = 1.0 - t;
+				int r = m_tgt_r * t + 255 * t2;
+				int g = m_tgt_g * t + 192 * t2;
+				int b = m_tgt_b * t + 192 * t2;
+				fill(r, g, b, a);
+				ellipse(m_x, m_y, m_r_cur, m_r);
+			}
+			break;
+		}
+	}
+}
+</script>
+</head>
+<body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0">
+	<div class="body">
+	<div class="container">
+		<canvas width="320" height="96" id="canvas"></canvas>
+		<h2 class="overlay">Info</h2>
+		<div class="menu">
+		<h3>Author: babagiant</h3>
+		<img src="./img/2.png" style="margin-top: 8px; margin-bottom: 8px;"><br clear="both">
+		<a href="./index.html">back</a>
 		</div>
-		<div class="info">
-			Author: babagiant<br>
-			<img src="./img/2.png">
-			<br clear="both">
-			<a href="./index.html">back</a>
-		</div>
-	</body>
+	</div>
+	</div>
+</body>
 </html>

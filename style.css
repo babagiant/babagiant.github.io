@@ -31,10 +31,21 @@ h1
   margin: 0px;
   pointer-events: none;
 }
-h2, h3 {
+h2 {
   z-index: 2;
   color: #fdf;
   font-size: 24px;
+  font-weight: bold;
+  text-shadow: 3px 3px 5px rgba(32,0,32,0.9);
+  margin: 0px;
+  margin-top: 16px;
+  padding: 0px;
+  pointer-events: none;
+}
+h3 {
+  z-index: 2;
+  color: #fff;
+  font-size: 20px;
   font-weight: bold;
   text-shadow: 3px 3px 5px rgba(32,0,32,0.9);
   margin: 0px;
