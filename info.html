@@ -101,8 +101,7 @@ class CCircleObj {
 			break;
 
 		case 1:
-			m_vx = 0.0f;
-			m_vy = 0.0f;
+			m_vy *= 0.5f;
 			m_cnt = 0;
 			m_cntTgt = 60 + (int)random(0, 90);
 			m_tgt_r = random(16, 255);
@@ -156,7 +155,10 @@ class CCircleObj {
 
 		case 1:
 			{
-				float t = (float)m_cnt / m_cntTgt;
+				float t = (float)m_cnt / m_cntTgt * 1.5;
+				if(t > 1.0) {
+					t = 1.0;
+				}
 				float t2 = 1.0 - t;
 				int r = m_tgt_r * t + 255 * t2;
 				int g = m_tgt_g * t + 192 * t2;
