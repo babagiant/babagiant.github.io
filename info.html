@@ -130,7 +130,7 @@ class CCircleObj {
 
 		case 1:
 			m_vx *= random(0.70, 0.8);
-			m_vy += random(0.2, 0.3);
+			m_vy += random(0.15, 0.25);
 			m_r_cur *= random(0.994, 0.998);
 			break;
 		}
@@ -142,22 +142,28 @@ class CCircleObj {
 		if(a > 255) {
 			a = 255;
 		}
+
+		noStroke();
+
 		switch(m_step) {
 		case 0:
-			noStroke();
 			fill(255, 192, 192, a);
+			ellipse(m_x - m_vx * 0.9, m_y - m_vy * 0.9, m_r_cur, m_r_cur);
+			ellipse(m_x - m_vx * 0.7, m_y - m_vy * 0.7, m_r_cur, m_r_cur);
+			ellipse(m_x - m_vx * 0.4, m_y - m_vy * 0.4, m_r_cur, m_r_cur);
 			ellipse(m_x, m_y, m_r_cur, m_r_cur);
 			break;
 
 		case 1:
 			{
-				noStroke();
 				float t = (float)m_cnt / m_cntTgt;
 				float t2 = 1.0 - t;
 				int r = m_tgt_r * t + 255 * t2;
 				int g = m_tgt_g * t + 192 * t2;
 				int b = m_tgt_b * t + 192 * t2;
 				fill(r, g, b, a);
+				ellipse(m_x - m_vx * 0.3, m_y - m_vy * 0.3, m_r_cur, m_r);
+				ellipse(m_x - m_vx * 0.7, m_y - m_vy * 0.7, m_r_cur, m_r);
 				ellipse(m_x, m_y, m_r_cur, m_r);
 			}
 			break;
