@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja">
+<meta charset="utf-8">
+<title>20251201</title>
+<link rel="stylesheet" href="style2.css" type="text/css">
+<script type="text/javascript" src="./js/processing.js"></script>
+<script type="text/javascript">
+window.onload = function() {
+	var canvas = document.getElementsByTagName('canvas')[0];
+	var codeElm = document.getElementById('p55code');
+	var code = codeElm.textContent || codeElm.innerText;
+	new Processing(canvas, code);
+};
+</script>
+<script id="p55code" type="application/processing">
+CSnowObj[] snow_obj;
+CBgObj[] bg_obj;
+CMoveObj[] move_obj;
+CMoveObj[] cloud_obj;
+CMoveObj hazy_moon_obj;
+int num_snow_obj = 128*8;
+int num_bg_obj = 64*4;
+int num_move_obj = 7;
+int num_cloud_obj = 4;
+float rot = 0.0;
+int size_x = window.innerWidth;
+int size_y = 480;
+int size_x_half = size_x / 2;
+int size_y_half = size_y / 2;
+float wind_vx = 0.0;
+float bank_y = size_y;
+
+// setup
+void setup()
+{
+	size(size_x, size_y);
+
+	background(32);
+	smooth();
+	snow_obj = new CSnowObj[num_snow_obj];
+	bg_obj = new CBgObj[num_bg_obj];
+	for(int i = 0; i < num_snow_obj; i++) {
+		snow_obj[i] = new CSnowObj();
+	}
+	for(int i = 0; i < num_bg_obj; i++) {
+		bg_obj[i] = new CBgObj();
+	}
+	for(int i = 0; i < num_bg_obj; i++) {
+		bg_obj[i] = new CBgObj();
+	}
+	for(int i = 0; i < num_bg_obj/32; i++) {
+		bg_obj[i].addEmmisiveLight();
+	}
+	bg_obj.sort(function(a, b) {
+		int result = 0; 
+		float temp = a.m_sc - b.m_sc;
+		if (temp < 0){ 
+			result = -1; 
+		} else if (temp > 0){
+			result = 1; 
+		} else {
+			result = 0; 
+		}
+		return result; 
+	});
+	move_obj = new CMoveObj[num_move_obj];
+	int move_direction = random(0.0, 1.0) > 0.5 ? 1 : -1;
+	int move_obj_y_base = 180;
+	for(int i = 0; i < num_move_obj; i++) {
+		move_obj[i] = new CMoveObj(move_obj_y_base + (move_direction < 0 ? -80 : 0), 20, random(0.07, 0.12), move_direction, 0);
+		move_direction *= -1;
+		move_obj_y_base += 10;
+	}
+
+	cloud_obj = new CMoveObj[num_cloud_obj];
+	move_obj_y_base = 90;
+	for(int i = 0; i < num_cloud_obj; i++) {
+		cloud_obj[i] = new CMoveObj(move_obj_y_base, 24, random(0.06, 0.08), -1, 2);
+		move_obj_y_base += 14;
+	}
+
+	hazy_moon_obj = new CMoveObj(100, 0, 0.001, 1, 1);
+}
+
+// draw
+void draw() 
+{
+	background(0, 192);
+	wind_vx = wind_vx * 0.9 + (size_x_half - mouseX) * 0.1 * 0.1;
+	bank_y = bank_y * 0.85 + mouseY * 0.15;
+	for(int i = 0; i < num_snow_obj; i++) {
+		snow_obj[i].advance();
+	}
+	for(int i = 0; i < num_bg_obj; i++) {
+		bg_obj[i].advance();
+	}
+	for(int i = 0; i < num_move_obj; i++) {
+		move_obj[i].advance();
+	}
+	for(int i = 0; i < num_cloud_obj; i++) {
+		//cloud_obj[i].advance();
+	}
+	hazy_moon_obj.advance();
+
+	noStroke();
+	hazy_moon_obj.draw();
+	for(int i = 0; i < num_cloud_obj; i++) {
+		//cloud_obj[i].draw();
+	}
+	for(int i = 0; i < num_move_obj; i++) {
+		move_obj[i].draw();
+	}
+	for(int i = 0; i < num_bg_obj; i++) {
+		bg_obj[i].draw();
+	}
+	for(int i = 0; i < num_snow_obj; i++) {
+		snow_obj[i].draw();
+	}
+
+	rot += 0.01;
+	float mask_a_ofsset = abs(wind_vx);
+	if(mask_a_ofsset > 128.0) {
+		mask_a_ofsset = 128.0;
+	}
+	float b_offset = mask_a_ofsset * 0.7;
+	fill(16 + b_offset, 16, 96 + sin(rot) * 32 + b_offset, 48 + mask_a_ofsset);
+	rect(0, 0, size_x, size_y);
+
+	hazy_moon_obj.draw_bloom();
+}
+
+// CSnowObj
+class CSnowObj {
+	float m_x;
+	float m_y;
+	float m_vx;
+	float m_vy;
+	int m_alpha;
+
+	CSnowObj()
+	{
+		reset();
+	}
+
+	void reset()
+	{
+		m_x = random(0, size_x);
+		m_y = random(-80, size_y);
+		m_vx = random(-0.25, 0.25);
+		m_vy = random(0.8, 1.5);
+		m_alpha = 0;
+	}
+
+	void advance()
+	{
+		m_x += m_vx + wind_vx;
+		if(m_x > size_x)	{ m_x -= size_x; }
+		else if(m_x < 0)	{ m_x += size_x; }
+		m_y += m_vy;
+		m_alpha += 2;
+		if(m_alpha > 255) {
+			m_alpha = 255;
+		}
+		if(m_y > size_y) {
+			reset();
+		}
+	}
+
+	void draw()
+	{
+		float alpha_coef = abs(wind_vx - 8.0);
+		if(alpha_coef < 0.0) {
+			alpla_coef = 0.0
+		}
+		else if(alpha_coef > 16.0) {
+			alpla_coef = 16.0
+		}
+		int a = int((128.0 - alpha_coef) / 128.0 * m_alpha);
+		fill(255, a);
+		ellipse(m_x, m_y, 3.0, 3.0);
+	}
+}
+
+// CEmissiveObj
+class CEmissiveObj {
+	int m_r;
+	int m_g;
+	int m_b;
+	float m_tick;
+	int m_shape_type;
+
+	CEmissiveObj(int r, int g, int b, int shape_type)
+	{
+		m_tick = random(0.0, 0.3);
+		m_r = r;
+		m_g = g;
+		m_b = b;
+		m_shape_type = shape_type;
+	}
+
+	void advance()
+	{
+		if(m_shape_type == 0) {
+			m_tick += 0.05;
+		}
+		else if(m_shape_type == 1) {
+			m_tick += 0.02;
+		}
+	}
+
+	void draw(int x, int y)
+	{
+		if(m_shape_type == 0) {
+			float a = (sin(m_tick) + 1.0) * 0.5;
+			c = color(m_r, m_g, m_b, 80 * a);
+			fill(c);
+			rect(x - 6, y - 6, 12, 12);
+			c = color(m_r, m_g, m_b, 192 * a);
+			fill(c);
+			rect(x - 3, y - 3, 6, 6);
+		}
+		else if(m_shape_type == 1) {
+			float a = 0.125 + (sin(m_tick) + 1.0) * 0.125;
+			c = color(m_r, m_g, m_b, 48 * a);
+			fill(c);
+			ellipse(x+48, y+48, 160, 160);
+			c = color(m_r, m_g, m_b, 128 * a);
+			fill(c);
+			ellipse(x+48, y+48, 92, 92);
+		}
+	}
+
+	void draw_bloom(int x, int y)
+	{
+		if(m_shape_type == 1) {
+			float a = 0.125 + (sin(m_tick) + 1.0) * 0.125;
+			c = color(m_r, m_g, m_b, 255 * a);
+			fill(c);
+			ellipse(x+48, y+48, 48, 48);
+		}
+	}
+}
+
+// CBgObj
+class CBgObj {
+	float m_x;
+	float m_y;
+	float m_w;
+	float m_h;
+	float m_sc;
+	color m_color;
+	float m_tick;
+	CEmmisiveObv m_emmisveObj;
+
+	CBgObj()
+	{
+		reset();
+	}
+
+	void reset()
+	{
+		m_x = random(0, size_x);
+		m_sc = random(0.3, 0.7);
+		float sc_bg =  2 * m_sc;
+		m_h = random(24, 24*4) + 108 * (0.7 - m_sc);
+		m_w = random(12, 24) * sc_bg;
+		sc_col = 1;
+		m_color = color(32, 60 + random(60) * sc_col, 120 + random(120) * sc_col);
+		m_tick = random(0.0, 0.3);
+	}
+
+	void addEmmisiveLight()
+	{
+		m_emmisveObj = new CEmissiveObj(255, 255, 0, 0);
+	}
+
+	void advance()
+	{
+		m_x += wind_vx * m_sc;
+		if(m_x > size_x + m_w)		{ m_x -= size_x + m_w * 2; }
+		else if(m_x <  -m_w)	{ m_x += size_x + m_w * 2; }
+		m_y = size_y + 64 - bank_y * (1.0 - m_sc) * 0.6;
+		if(m_emmisveObj) {
+			m_emmisveObj.advance();
+		}
+	}
+
+	void draw()
+	{
+		fill(m_color, 255);
+		rect(m_x - m_w, m_y - m_h, m_w * 2, m_h + (size_y - m_y));
+		if(m_emmisveObj) {
+			m_emmisveObj.draw(m_x, m_y - m_h);
+		}
+	}
+}
+
+// CTrailParticle
+class CTrailParticle {
+	float m_x;
+	float m_y;
+	float m_vx;
+	float m_vy;
+	float m_sc;
+	int m_count;
+	int m_count_max;
+	boolean m_is_running;
+	color m_color;
+
+	CTrailParticle(float sc)
+	{
+		m_sc = sc;
+		m_is_running = false;
+		m_color = color(128, 128, 128);
+	}
+
+	void start(float sx, float sy, float vx, float vy, int life)
+	{
+		m_x = sx;
+		m_y = sy;
+		m_vx = vx * 0.9;
+		m_vy = vy * 0.9;
+		m_count_max = life;
+		m_count = 0;
+		m_is_running = true;
+	}
+
+	void draw()
+	{
+		if(!m_is_running) {
+			return;
+		}
+		if(++m_count >= m_count_max) {
+			m_is_running = false;
+			return;
+		}
+
+		float vx_cur = (wind_vx + m_vx) * m_sc;
+		m_x += vx_cur;
+		m_y = m_y + m_vy * m_sc;
+		m_vx *= 0.9;
+		m_vy *= 0.9;
+
+		float y = m_y + bank_y * (1.0 - m_sc) * -0.4;
+		int a = (m_count_max - m_count) * 256.0 / m_count_max;
+		fill(m_color, a / 3);
+		int w_half = 4 * a / 256;
+		int w = w_half * 2;
+		rect(m_x - w_half, y - w_half, w, w);
+	}
+}
+
+class CTrailParticleEmitter {
+	CTrailParticle[] m_trailParticle;
+	int m_num_trailParticle;
+	int m_index;
+	int m_emit_span_count;
+	int m_count;
+	float m_x_ofs;
+	float m_y_ofs;
+	int m_life;
+
+	CTrailParticleEmitter(float sc, float x_ofs, float y_ofs, int num_particle, int life)
+	{
+		m_index = 0;
+		m_num_trailParticle = num_particle;
+		m_emit_span_count = 20;
+		m_count = 0;
+		m_x_ofs = x_ofs;
+		m_y_ofs = y_ofs;
+		m_life = life;
+
+		m_trailParticle = new CTrailParticle[m_num_trailParticle];
+		for(int i = 0; i < m_num_trailParticle; i++) {
+			m_trailParticle[i] = new CTrailParticle(sc);
+		}
+	}
+
+	void start(float sx, float sy, float vx, float vy, int life)
+	{
+		if(m_trailParticle[m_index].m_is_running) {
+			return;
+		}
+		m_trailParticle[m_index].start(sx + m_x_ofs - vx * 4.0, sy + m_y_ofs - vy * 4.0, vx, vy, life);
+		if(++m_index >= m_num_trailParticle) {
+			m_index = 0;
+		}
+	}
+
+	void advance(float x, float y, float vx, float vy)
+	{
+		if(++m_count >= m_emit_span_count) {
+			m_count = 0;
+			start(x, y, vx, vy, m_life);
+		}
+	}
+
+	void draw()
+	{
+		for(int i = 0; i < m_num_trailParticle; i++) {
+			m_trailParticle[i].draw();
+		}
+	}
+}
+
+// CMoveObj
+class CMoveObj {
+	float m_x;
+	float m_y_origin;
+	float m_y;
+	float m_vx;
+	float m_vy;
+	float m_w;
+	float m_h;
+	float m_sc;
+	color m_color;
+	int m_move_dir;
+	CEmmisiveObv m_emmisveObj;
+	int m_shape_type;
+	CTrailParticleEmitter m_trailParticleEmitter;
+
+	CMoveObj(int y, int y_range, float sc, int move_dir, int shape_type)
+	{
+		int y_range_half = y_range / 2;
+		m_shape_type = shape_type;
+		m_y_origin = m_y = y + random(-y_range_half, y_range_half);
+		m_move_dir = move_dir;
+		m_sc = sc;
+
+		if(shape_type == 0) {
+			m_x = random(0, size_x);
+			m_vx = random(10.0, 20.0) * move_dir;
+			m_vy = random(1.0, 3.0) * -move_dir;
+			m_h = random(8, 12);
+			m_w = random(12, 18);
+			float sc_col = m_sc + 0.3;
+			m_color = color(40 * sc_col, 50 * sc_col, 60 + random(60) * sc_col);
+			m_emmisveObj = new CEmissiveObj(255, 128, 0, 0);
+			m_trailParticleEmitter = new CTrailParticleEmitter(sc, 0.0, -13.0, 5, 90);
+		}
+		else if(shape_type == 1) {
+			m_x = random(0, size_x_half);
+			m_vx = 150.0;
+			m_vy = 0.0;
+			m_h = 48.0;
+			m_w = 48.0;
+			m_color = color(255, 255, 64, 192);
+			m_emmisveObj = new CEmissiveObj(255, 255, 32, 1);
+		}
+		else if(shape_type == 2) {
+			m_x = random(0, size_x_half);
+			m_vx = random(40.0, 60.0) * move_dir;
+			m_vy = 0.0;
+			m_h = random(32.0, 48.0);
+			m_w = random(96.0, 256.0);
+			float sc_col = m_sc + 0.3;
+			m_color = color(192, 192, 192, 96);
+		}
+	}
+
+	void restart(float vx)
+	{
+		m_x = vx > 0.0 ? -m_w * 2.0 : size_x;
+		m_y = m_y_origin;
+	}
+
+	void advance()
+	{
+		float vx_cur = (wind_vx + m_vx) * m_sc;
+		float vy_cur = m_vy * m_sc;
+		m_x += vx_cur;
+		m_y = m_y + vy_cur;
+		if(m_x > size_x + m_w) {
+			restart(vx_cur);
+		}
+		else if(m_x < -m_w * 2.0) {
+			restart(vx_cur);
+		}
+		else if(m_y > size_y + m_h || m_y < -m_h) {
+			restart(vx_cur);
+		}
+		if(m_emmisveObj) {
+			m_emmisveObj.advance();
+		}
+
+		if(m_trailParticleEmitter) {
+			m_trailParticleEmitter.advance(m_x, m_y, vx_cur, vy_cur);
+		}
+	}
+
+	void draw()
+	{
+		if(m_trailParticleEmitter) {
+			m_trailParticleEmitter.draw();
+		}
+
+		float y = m_y + bank_y * (1.0 - m_sc) * -0.4;
+		if(m_shape_type == 0) {
+			fill(m_color, 255);
+			rect(m_x - m_w + m_w * m_move_dir / 3.0, y - m_h * 2.0, m_w * 2.0, m_h);
+			rect(m_x + m_w * m_move_dir * 1.5 - 4.0, y - m_h * 1.5, 8, 8);
+			if(m_emmisveObj) {
+				m_emmisveObj.draw(m_x, y - m_h);
+			}
+		}
+		else if(m_shape_type == 1) {
+			fill(m_color);
+			ellipse(m_x + m_w, y + m_h, m_w, m_h);
+			if(m_emmisveObj) {
+				m_emmisveObj.draw(m_x, y);
+			}
+		}
+		else if(m_shape_type == 2) {
+			fill(m_color);
+			rect(m_x, y, m_w, m_h);
+		}
+	}
+
+	void draw_bloom()
+	{
+		if(m_emmisveObj) {
+			if(m_shape_type == 1) {
+				y = m_y + bank_y * (1.0 - m_sc) * -0.4;
+				m_emmisveObj.draw_bloom(m_x, y);
+			}
+		}
+	}
+}
+</script>
+</head>
+<body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0">
+
+<div class="body">
+<canvas width="1320" height="96" style="cursor: crosshair"></canvas>
+<h2>20251201</h2>
+<a href="./index.html" title="return">return</a><br>
+</div>
+
+</body>
+</html>

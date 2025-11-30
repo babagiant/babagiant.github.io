@@ -45,14 +45,12 @@ h4 {
 img {
   border:0px;
   vertical-align:middle;
-  margin 0px;
-  padding 0px;
+  margin: 0px;
+  padding: 0px;
 }
 .body {
   padding:32px 32px;
   margin:0px;
-}
-.logbody {
 }
 .menu {
   text-align: left;
