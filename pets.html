@@ -1,0 +1,142 @@
+﻿<!doctype html>
+<html lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja">
+<meta charset="utf-8">
+<title>20251203</title>
+<link rel="stylesheet" href="style3.css" type="text/css">
+<script type="text/javascript" src="./js/processing.js"></script>
+<script type="text/javascript">
+window.onload = function() {
+	var canvas = document.getElementsByTagName('canvas')[0];
+	var codeElm = document.getElementById('p55code');
+	var code = codeElm.textContent || codeElm.innerText;
+	new Processing(canvas, code);
+};
+</script>
+<script id="p55code" type="application/processing">
+int win_szx = window.innerWidth;
+int win_szy = 640;
+CMoveObj[] obj;
+float t_rot;
+float c_rot;
+
+float tx = win_szx / 2;
+float ty = win_szy / 2;
+int num_obj = 32;
+boolan is_idle = false;
+
+// setup
+void setup()
+{
+    size(win_szx, win_szy);
+
+    frameRate(60);
+    background(32);
+    smooth();
+    t_rot = 0;
+    c_rot = 0;
+    obj = new CMoveObj[num_obj];
+    for(int i = 0; i < num_obj; i++) {
+        obj[i] = new CMoveObj(win_szx/2, win_szy/2, 96, i * 0.4);
+    }
+}
+
+// draw
+void draw()
+{
+    fill(0, 8);
+    rect(0, 0, win_szx, win_szy);
+
+    float cx, cy;
+    int margin = 40;
+    if((margin < mouseX && mouseX < win_szx - margin) && (margin < mouseY && mouseY < win_szy - margin)) {
+        cx = mouseX;
+        cy = mouseY;
+        c_rot += 0.03;
+        is_idle = false;
+    }
+    else {
+        cx = win_szx / 2;
+        cy = win_szy / 2;
+        is_idle = true;
+    }
+    t_rot += 0.04;
+    tx = cx + sin(t_rot) * 80;
+    ty = cy + cos(t_rot) * 80;
+
+    stroke(48, 32);
+
+    for(int i = 0; i < num_obj; i++) {
+        obj[i].advance(tx, ty);
+        obj[i].draw();
+    }
+}
+
+// CMoveObj
+class CMoveObj {
+    float m_x;
+    float m_y;
+    float m_vx;
+    float m_vy;
+    float m_near;
+    float m_rot;
+
+    CMoveObj(float x, float y, float near, float rot)
+    {
+        m_x = x;
+        m_y = y;
+        m_vx = m_vy = 0;
+        m_near = near;
+        m_rot = rot;
+    }
+
+    void advance(float tx, float ty)
+    {
+        float dx = tx - m_x;
+        float dy = ty - m_y;
+        float len = dist(m_x, m_y, tx, ty);
+        float dir = len > m_near ? 1 : -1.5;
+        m_vx += dx * (0.015 + random(0.015)) * dir;
+        m_vy += dy * (0.015 + random(0.015)) * dir;
+
+        // clamp
+        float vel = sqrt(m_vx * m_vx + m_vy * m_vy);
+        float max_vel = mousePressed ? 8 : 20;
+        if(vel > max_vel) {
+            m_vx = m_vx / vel * max_vel;
+            m_vy = m_vy / vel * max_vel;
+        }
+        m_x += m_vx;
+        m_y += m_vy;
+        m_rot += 0.05 + random(0.025);
+    }
+
+    void draw()
+    {
+        float rx = 48 + sin(m_rot) * 16;
+        float ry = 48 + sin(m_rot) * 16;
+        if(is_idle) {
+            fill(128 + random(64), 128 + random(64), 128 + random(64));
+        }
+        else {
+            fill(31 + random(224), 31 + random(224), 31 + random(224));
+        }
+        ellipse(m_x, m_y, rx, ry);
+    }
+
+    float getx() { return m_x; }
+
+    float gety() { return m_y; }
+}
+
+</script>
+</head>
+<body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0">
+    <div class="body">
+        <canvas width="64" height="64" id="canvas" style="cursor: crosshair"></canvas>
+        <h2>20251203</h2>
+        <a href="./index.html" title="return">return</a><br>
+    </div>
+</body>
+</html>
