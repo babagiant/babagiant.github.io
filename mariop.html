@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja">
+<meta charset="utf-8">
+<title>20251203</title>
+<link rel="stylesheet" href="style2.css" type="text/css">
+<script type="text/javascript" src="./js/processing.js"></script>
+<script type="text/javascript">
+window.onload = function() {
+	var canvas = document.getElementsByTagName('canvas')[0];
+	var codeElm = document.getElementById('p55code');
+	var code = codeElm.textContent || codeElm.innerText;
+	new Processing(canvas, code);
+};
+</script>
+<script id="p55code" type="application/processing">
+boolean is_mouse_trg = false;
+boolean is_mouse_pressed_pre = false;
+
+static final int SCREEN_WIDTH		=	480;
+static final int SCREEN_HEIGHT		=	640;
+static final int GRID_WIDTH			=	16;
+static final int GRID_HEIGHT		=	16;
+static final int GRID_SIZE			=	24;
+static final int GRID_X1			=	(SCREEN_WIDTH - GRID_WIDTH * GRID_SIZE) / 2;
+static final int GRID_X2			=	GRID_X1 + GRID_WIDTH * GRID_SIZE;
+static final int GRID_Y1			=	208;
+static final int GRID_Y2			=	GRID_Y1 + GRID_HEIGHT * GRID_SIZE;
+static final int GRID_SIZE_SUB		=	9;
+static final int GRID_X1_SUB		=	(SCREEN_WIDTH - GRID_WIDTH * GRID_SIZE_SUB) / 2;
+static final int GRID_X2_SUB		=	GRID_X1_SUB + GRID_WIDTH * GRID_SIZE_SUB;
+static final int GRID_Y1_SUB		=	32;
+static final int GRID_Y2_SUB		=	GRID_Y1_SUB + GRID_HEIGHT * GRID_SIZE_SUB;
+
+final int[][] chara_data = { // GRID_WIDTH * GRID_HEIGHT
+	{0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2},
+	{0,0,0,0,0,0,1,1,1,1,1,0,0,2,2,2},
+	{0,0,0,0,0,1,1,1,1,1,1,1,1,1,2,2},
+	{0,0,0,0,0,3,3,3,2,2,3,2,0,3,3,3},
+	{0,0,0,0,3,2,3,2,2,2,3,2,2,3,3,3},
+	{0,0,0,0,3,2,3,2,2,2,2,3,2,2,2,3},
+	{0,0,0,0,3,3,2,2,2,2,3,3,3,3,3,0},
+	{0,0,0,0,0,0,2,2,2,2,2,2,2,3,0,0},
+	{0,0,3,3,3,3,3,1,3,3,3,1,3,0,0,0},
+	{0,3,3,3,3,3,3,3,1,3,3,3,1,0,0,3},
+	{2,2,3,3,3,3,3,3,1,1,1,1,1,0,0,3},
+	{2,2,2,0,1,1,3,1,1,2,1,1,2,1,3,3},
+	{0,2,0,3,1,1,1,1,1,1,1,1,1,1,3,3},
+	{0,0,3,3,3,1,1,1,1,1,1,1,1,1,3,3},
+	{0,3,3,3,1,1,1,1,1,1,1,0,0,0,0,0},
+	{0,3,0,0,1,1,1,1,0,0,0,0,0,0,0,0}
+};
+color[] plt = {
+	color(0, 0, 0),
+	color(0, 160, 255),           //藍
+	color(255, 32, 32),           //赤
+	color(255, 14*16, 160),       //肌
+	color(128, 128, 0),           //黄土
+	color(0, 0, 0),
+	color(0, 0, 0),
+	color(0, 0, 0),
+	color(0, 0, 0),
+	color(0/2, 10/2, 255/2),       //藍
+	color(255/2, 32/2, 32/2),      //赤
+	color(255/2, 12*16/2, 128/2),  //肌
+	color(128/2, 128/2, 0/2),      //黄土
+	color(0, 0, 0),
+	color(0, 0, 0),
+	color(0, 0, 0),
+};
+
+
+// chip
+class CChip {
+	int m_col_idx;
+	int m_grid_x;
+	int m_grid_y;
+	int m_grid_x_org;
+	int m_grid_y_org;
+	PVector m_pt;
+	PVector m_curP;
+
+	CChip(int gx, int gy, int col_idx)
+	{
+		m_pt = new PVector();
+		m_grid_x_org = gx;
+		m_grid_y_org = gy;
+		set_pos_by_grid(gx, gy);
+		m_curP = new PVector(144, 288);
+		m_col_idx = col_idx;
+	}
+
+	void update()
+	{
+		m_curP.x = (m_curP.x * 60 + m_pt.x * 40) / 100;
+		m_curP.y = (m_curP.y * 60 + m_pt.y * 40) / 100;
+	}
+
+	void draw()
+	{
+		float x = m_curP.x;
+		float y = m_curP.y;
+		fill(plt[m_col_idx]);
+		rect(x, y, GRID_SIZE-2, GRID_SIZE-2);
+		stroke(0);
+		line(x+GRID_SIZE-1, y, x+GRID_SIZE-1, y+GRID_SIZE-1);
+		line(x, y+GRID_SIZE-1, x+GRID_SIZE-1, y+GRID_SIZE-1);
+
+		fill(plt[(int)(grid_org[m_grid_x][m_grid_y] + (grid_org[m_grid_x][m_grid_y] == grid[m_grid_x][m_grid_y] ? 0 : 8))]);
+		rect(GRID_X1_SUB + GRID_SIZE_SUB * m_grid_x, GRID_Y1_SUB + GRID_SIZE_SUB * m_grid_y, GRID_SIZE_SUB-1, GRID_SIZE_SUB-1);
+	}
+
+	void draw_big()
+	{
+		final int wofs = 5;
+		float x = m_curP.x;
+		float y = m_curP.y;
+		fill(plt[m_col_idx]);
+		rect(x-wofs, y-wofs, GRID_SIZE-2+wofs*2, GRID_SIZE-2+wofs*2);
+		stroke(0);
+		line(x+GRID_SIZE-1+wofs, y-wofs, x+GRID_SIZE-1+wofs, y+GRID_SIZE-1+wofs);
+		line(x-wofs, y+GRID_SIZE-1+wofs, x+GRID_SIZE-1+wofs, y+GRID_SIZE-1+wofs);
+		line(x-wofs, y-wofs, x+GRID_SIZE-1+wofs, y-wofs);
+		line(x-wofs, y-wofs, x-wofs, y+GRID_SIZE-1+wofs);
+	}
+
+	void reset() { set_pos_by_grid(m_grid_x_org, m_grid_y_org); }
+	void set_pos_by_grid(int gx, int gy)
+	{
+		m_grid_x = gx;
+		m_grid_y = gy;
+		m_pt.x = GRID_X1 + GRID_SIZE * gx;
+		m_pt.y = GRID_Y1 + GRID_SIZE * gy;
+	}
+	int get_grid_x_org() { return m_grid_x_org; }
+	int get_grid_y_org() { return m_grid_y_org; }
+}
+
+CChip[][] chip;
+CChip[][] chip_org;
+int[][] grid;
+int[][] grid_org;
+
+static final int MODE_START = 0;
+static final int MODE_MOVE = 1;
+static final int MODE_LOCK = 2;
+static final int MODE_CLEAR = 3;
+static final int GSTAT_NORMAL = 0;
+static final int GSTAT_LOCK = 1;
+
+int mode;
+int step;
+int type;
+PVector posPrev = new PVector();
+int cnt;
+int timer;
+
+// setup
+void setup()
+{
+	frameRate(60);
+	size(SCREEN_WIDTH, SCREEN_HEIGHT);
+	step = 0;
+	type = 1;
+	cnt = 0;
+	timer = 0;
+	mode = MODE_START;
+
+	chip = new CChip[GRID_WIDTH][GRID_HEIGHT];
+	chip_org = new CChip[GRID_WIDTH][GRID_HEIGHT];
+	grid = new int[GRID_WIDTH][GRID_HEIGHT];
+	grid_org = new int[GRID_WIDTH][GRID_HEIGHT];
+
+	// グリッドの初期化
+	reset_1st();
+
+	// チップの構築
+	PVector pt = new PVector();
+	for(int i = 0; i < GRID_WIDTH; i++) {
+		for(int j = 0; j < GRID_HEIGHT; j++) {
+			chip[i][j] = chip_org[i][j] = new CChip(i, j, grid[i][j]);
+		}
+	}
+}
+
+// reset
+void reset()
+{
+	for(int i = 0; i < GRID_WIDTH; i++) {
+		for(int j = 0; j < GRID_HEIGHT; j++) {
+			grid[i][j] = chara_data[j][i]+1;
+			chip[i][j] = chip_org[i][j];
+			chip[i][j].reset();
+		}
+	}
+} 
+
+// reset_1st
+void reset_1st()
+{
+	for(int i = 0; i < GRID_WIDTH; i++) {
+		for(int j = 0; j < GRID_HEIGHT; j++) {
+			grid[i][j] = chara_data[j][i]+1;
+			grid_org[i][j] = chara_data[j][i]+1;
+		}
+	}
+}
+
+// reset_org
+void reset_org()
+{
+	for(int i = 0; i < GRID_WIDTH; i++) {
+		for(int j = 0; j < GRID_HEIGHT; j++) {
+			grid_org[i][j] = chara_data[j][i]+1;
+			int x = GRID_X1_SUB + GRID_SIZE_SUB * i;
+			int y = GRID_Y1_SUB + GRID_SIZE_SUB * j;
+			fill(plt[grid_org[i][j]]);
+			rect(x, y, GRID_SIZE_SUB-2, GRID_SIZE_SUB-2);
+		}
+	}
+}
+
+// swap
+void swap(int x1, int y1, int x2, int y2)
+{
+	int t1 = grid[x1][y1];
+	grid[x1][y1] = grid[x2][y2];
+	grid[x2][y2] = t1;
+
+	chip[x1][y1].set_pos_by_grid(x2, y2);
+	chip[x2][y2].set_pos_by_grid(x1, y1);
+
+	CChip c = chip[x1][y1];
+	chip[x1][y1] = chip[x2][y2];
+	chip[x2][y2] = c;
+	//se.stop();
+	//se.trigger();
+}
+
+// shuffle
+void shuffle()
+{
+	int x1 = (int)random(GRID_WIDTH);
+	int y1 = (int)random(GRID_HEIGHT);
+	int x2 = (x1 + (int)random(GRID_WIDTH - 1)) % GRID_WIDTH;
+	int y2 = (y1 + (int)random(GRID_HEIGHT - 1)) % GRID_HEIGHT;
+	swap(x1, y1, x2, y2);
+}
+
+
+// draw
+void draw()
+{
+	 background(0, 32, 32);
+
+	// mouse trigger
+	if(!is_mouse_pressed_pre && mousePressed) {
+		is_mouse_trg = true;
+	}
+	else {
+		is_mouse_trg = false;
+	}
+	is_mouse_pressed_pre = mousePressed;
+
+	switch(mode) {
+	case MODE_START:
+		advance_start();
+		break;
+	case MODE_CLEAR:
+		advance_clear();
+		break;
+	case MODE_MOVE:
+		advance_move();
+		break;
+	}
+
+	for(int i = 0; i < GRID_WIDTH; i++) {
+		for(int j = 0; j < GRID_HEIGHT; j++) {
+			chip[i][j].update();
+			chip[i][j].draw();
+		}
+	}
+	switch(mode) {
+	case MODE_MOVE:
+		if(step == 1 && (posPrev.x != -1 && posPrev.y != -1)) {
+			chip[(int)posPrev.x][(int)posPrev.y].draw_big();
+			draw_marker();
+		}
+		break;
+	}
+}
+
+void stop()
+{
+	super.stop();
+}
+
+//
+int get_grid_x(float x)
+{
+	if(x < GRID_X1) return -1;
+	if(x >= GRID_X2) return -1;
+	x = x - GRID_X1;
+	return int(x / GRID_SIZE);
+}
+
+
+//
+int get_grid_y(float y)
+{
+	if(y < GRID_Y1) return -1;
+	if(y >= GRID_Y2) return -1;
+	y = y - GRID_Y1;
+	return int(y / GRID_SIZE);
+}
+
+void print(String c, int x, int y)
+{
+	fill(32, 32, 32);
+	text(c, x+1, y+1);
+	fill(224, 224, 224);
+	text(c, x, y);
+}
+
+// クリア判定
+boolean judge()
+{
+	int cnt_match = 0;
+	int cnt_total = 0;
+	for(int i = 0; i < GRID_WIDTH; i++) {
+		for(int j = 0; j < GRID_HEIGHT; j++) {
+			if(grid[i][j] == grid_org[i][j]) {
+				cnt_match++;
+			}
+			cnt_total++;
+		}
+	}
+	print(str(cnt_match) + "/" + str(cnt_total), 48, 200);
+	return cnt_match == cnt_total ? true : false;
+}
+
+// draw marker
+void draw_marker()
+{
+	if(posPrev.x != -1 && posPrev.y != -1) {
+		int x = int(GRID_X1_SUB + GRID_SIZE_SUB * posPrev.x + GRID_SIZE_SUB / 2 + 1);
+		int y = int(GRID_Y1_SUB + GRID_SIZE_SUB * posPrev.y + GRID_SIZE_SUB / 2 - 1);
+		stroke(255);
+		line(x, y, x + 8, y - 8);
+		line(x, y, x + 4, y);
+		line(x, y, x, y - 4);
+		stroke(0);
+	}
+}
+
+void set_mode(int m)
+{
+	mode = m;
+	step = 0;
+	cnt = 0;
+}
+
+// advance_start
+void advance_start()
+{
+	switch(step) {
+	case 0:
+		cnt = 60*3+30;
+		timer = 0;
+		step = 1;
+	case 1:
+		if(cnt > 0) {
+		if(cnt < 60 * 3) {
+			print("READY...", 48, 32);
+			shuffle();
+		}
+		cnt--;
+		}
+		else {
+			cnt = 60;
+			step = 2;
+		}
+		break;
+	case 2:
+		if(cnt > 0) {
+			print("GO!!!", 48, 32);
+			cnt--;
+		}
+		else {
+			set_mode(MODE_MOVE);
+		}
+		break;
+	}
+}
+
+
+// advance_clear
+void advance_clear()
+{
+	if(cnt < 90) {
+		++cnt;
+	}
+	else {
+		if(((++cnt >> 4) & 1) == 0) {
+			print("CLICK TO RETRY!", 48, 32);
+		}
+		if(cnt > 90 && mousePressed == true) {
+			set_mode(MODE_START);
+		}
+	}
+}
+
+// advance_move
+void advance_move()
+{
+	if(keyPressed == true && key == 'z') {
+		reset();
+	}
+
+	timer++;
+	if(mousePressed == false) {
+		step = 0;
+	}
+	else {
+		PVector p = new PVector((float)mouseX, (float)mouseY);
+		switch(step) {
+		case 0:
+			if(is_mouse_trg == true) {
+				int x = get_grid_x(p.x);
+				int y = get_grid_y(p.y);
+				if(x != -1 && y != -1) {
+				    step = 1;
+				    posPrev.x = x;
+				    posPrev.y = y;
+				    //se.stop();
+				    //se.trigger();
+				}
+			}
+			break;
+		case 1:
+			int x = get_grid_x(p.x);
+			int y = get_grid_y(p.y);
+			if(x == -1 || y == -1) {
+				step = 0;
+				posPrev.x = -1;
+				posPrev.y = -1;
+				break;
+			}
+			if(posPrev.x != x || posPrev.y != y) {
+				swap(x, y, (int)posPrev.x, (int)posPrev.y);
+				posPrev.x = x;
+				posPrev.y = y;
+				break;
+			}
+			break;
+		}
+	}
+	print("Z: force clear", 48, GRID_Y2+16);
+	if(judge()) {
+		set_mode(MODE_CLEAR);
+	}
+}
+</script>
+</head>
+<body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0">
+<div class="body">
+<canvas style="cursor: pointer"></canvas>
+<h2>20251203</h2>
+<a href="./index.html" title="return">return</a><br>
+</div>
+
+</body>
+</html>
+
