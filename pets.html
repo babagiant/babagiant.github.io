@@ -102,7 +102,8 @@ class CMoveObj {
 
         // clamp
         float vel = sqrt(m_vx * m_vx + m_vy * m_vy);
-        float max_vel = mousePressed ? 8 : 20;
+        //float max_vel = mousePressed ? 8 : 20;
+        float max_vel = 20;
         if(vel > max_vel) {
             m_vx = m_vx / vel * max_vel;
             m_vy = m_vy / vel * max_vel;
