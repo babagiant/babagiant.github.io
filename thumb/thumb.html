@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>thumb</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: monospace, Consolas, Monaco, 'Courier New';
+        }
+        .image-container {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+        .image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body class="p-4 bg-gradient-to-r from-black-500 via-gray-500 to-black-500">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center text-white-300 [text-shadow:0_4px_8px_rgba(0,0,0,0.5)]">thumb</h1>
+        <!-- Grid Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-3" id="gallery">
+
+            <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
+                <div class="image-container">
+                    <img data-src="processed/IMG00016_processed.jpg" alt="Gallery image" />
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
+                <div class="image-container">
+                    <img data-src="processed/IMG00015_processed.jpg" alt="Gallery image" />
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
+                <div class="image-container">
+                    <img data-src="processed/IMG00014_processed.jpg" alt="Gallery image" />
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
+                <div class="image-container">
+                    <img data-src="processed/IMG00013_processed.jpg" alt="Gallery image" />
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
+                <div class="image-container">
+                    <img data-src="processed/IMG00010_processed.jpg" alt="Gallery image" />
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
+                <div class="image-container">
+                    <img data-src="processed/IMG00001_processed.jpg" alt="Gallery image" />
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
+                <div class="image-container">
+                    <img data-src="processed/IMG00000_processed.jpg" alt="Gallery image" />
+                </div>
+            </div>
+        </div>
+        <h1 class="mt-6 text-2xl font-bold mb-6 text-center text-white-300 [text-shadow:0_4px_8px_rgba(0,0,0,0.5)]"><a href="../">back</a></h1>
+    </div>
+
+    <!-- Lazy Load Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const images = document.querySelectorAll("img[data-src]");
+            // Intersection Observer setup
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const img = entry.target;
+                    if (entry.isIntersecting) {
+                        // Lazy load: set src from data-src
+                        if (!img.src) {
+                            img.src = img.dataset.src;
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            images.forEach(img => {
+                observer.observe(img);
+            });
+        });
+    </script>
+</body>
+</html>
