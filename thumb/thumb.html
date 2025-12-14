@@ -95,21 +95,25 @@
                 });
             }, lazyLoadOptions);
 
-            // Fade Observer (フェードイン/フェードアウト用、高い threshold で遅延)
+            // Fade Observer (フェードイン/フェードアウト用)
+            const fadeThreshold = 0.25;
+            
             const fadeOptions = {
                 root: null,
                 rootMargin: '0px',
-                threshold: 0.75  // 画像の75%がビューに入ってからフェードイン開始
+                threshold: fadeThreshold
             };
 
             const fadeObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     const img = entry.target;
-                    if (entry.isIntersecting) {
-                        // フェードイン開始
+                    const ratio = entry.intersectionRatio;
+                    
+                    if (ratio >= fadeThreshold) {
+                        // フェードイン: threshold 以上で visible を追加
                         img.classList.add('visible');
                     } else {
-                        // フェードアウト開始 (同じタイミングで)
+                        // フェードアウト: threshold 未満で visible を削除
                         img.classList.remove('visible');
                     }
                 });
