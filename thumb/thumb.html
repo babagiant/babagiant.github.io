@@ -38,6 +38,36 @@
 
             <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
                 <div class="image-container">
+                    <img data-src="processed/IMG00029_processed.jpg" alt="Gallery image" />
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
+                <div class="image-container">
+                    <img data-src="processed/IMG00027_processed.jpg" alt="Gallery image" />
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
+                <div class="image-container">
+                    <img data-src="processed/IMG00024_processed.jpg" alt="Gallery image" />
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
+                <div class="image-container">
+                    <img data-src="processed/IMG00022_processed.jpg" alt="Gallery image" />
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
+                <div class="image-container">
+                    <img data-src="processed/IMG00021_processed.jpg" alt="Gallery image" />
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
+                <div class="image-container">
+                    <img data-src="processed/IMG00019_processed.jpg" alt="Gallery image" />
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-none overflow-hidden shadow-lg">
+                <div class="image-container">
                     <img data-src="processed/IMG00016_processed.jpg" alt="Gallery image" />
                 </div>
             </div>
@@ -78,7 +108,7 @@
     <!-- Lazy Load & Fade Script -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            const images = document.querySelectorAll("img[data-src]"); 
+            const images = document.querySelectorAll("img[data-src]");
             // LazyLoad Observer (先読み用、早めに画像読み込み開始)
             const lazyLoadOptions = {
                 root: null,
@@ -97,7 +127,6 @@
 
             // Fade Observer (フェードイン/フェードアウト用)
             const fadeThreshold = 0.25;
-            
             const fadeOptions = {
                 root: null,
                 rootMargin: '0px',
@@ -108,7 +137,6 @@
                 entries.forEach(entry => {
                     const img = entry.target;
                     const ratio = entry.intersectionRatio;
-                    
                     if (ratio >= fadeThreshold) {
                         // フェードイン: threshold 以上で visible を追加
                         img.classList.add('visible');
